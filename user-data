@@ -97,8 +97,9 @@ users:
 
 # Run once-per-instance at the end of the installation
 # 1. Create 1GB swap file
-# 2. Do apt apgrade ( Now, it is safe because we have swap file.) 
-# 3. Then, shutdown .
+# 2. Do apt apgrade ( Now, it is safe because we have swap file.)
+# 3. Clobber and remove the Wi-Fi AP information
+# 4. Then, restart .
 runcmd:
 #- localectl set-x11-keymap "jp" pc105
 #- setupcon -k --force || true
