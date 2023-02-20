@@ -1,0 +1,114 @@
+#cloud-config
+
+# This file is targeting the Raspberry Pi 2, 3 and Zero 2 with the Waveshare ETH/USB HUB HAT(B)
+# RasPi : https://www.raspberrypi.com/products/raspberry-pi-zero-2-w/
+# HAT : https://www.waveshare.com/eth-usb-hub-hat-b.htm
+#
+# The user has default password "password". It is expired at the first time login
+# and then, required to change. 
+#
+# See the docuemntation for detail : 
+# https://cloudinit.readthedocs.io/en/latest/topics/modules.html#
+
+# Setup the host name
+hostname: ubuntu
+manage_etc_hosts: true
+
+
+# Setup locale
+timezone: Asia/Tokyo
+local: ja_JP.utf8
+
+# Install the essential package. avahi-daemon let you access the machine as "<hostname>.local".
+packages:
+- avahi-daemon
+- wireless-regdb
+
+# Do not upgrade the package now. RasPi Zero 2 has only 0.5GB memory. 
+# It is not enough to run apt upgrade.
+package_update: true
+package_upgrade: false
+
+# Disable the security check by date. 
+# The RasPi Zero doesn't have RTC. So the machine time cannot be trusted. 
+apt:
+  conf: |
+    Acquire {
+      Check-Date "false";
+    };
+
+# Write files to configuration. 
+# 1. Hook for the USB device RTL8151 which is the initial state of the RTL8152.
+# 2. USB modeswitch configuration to change RTL8151 to RTL8152, called by above hook.
+# 3. Configuration if Ethernet to name it "eth0"
+write_files:
+- path: /etc/udev/rules.d/40-usb_modeswitch.rules
+  content: |
+    # /etc/udev/rules.d/40-usb_modeswitch.rules
+    # Custom usb_modeswitch rules
+    # If matched, usb_modeswitch refer the external rules in the /etc/usb_modeswitch.d/xxxx:yyyy
+    # Where xxxx and yyyy are vender ID and device ID.
+
+    # Realtek RTL8151
+    
+    ATTR{idVendor}=="0bda", ATTR{idProduct}=="8151", RUN+="usb_modeswitch '/%k'"
+- path: /etc/usb_modeswitch.d/0bda:8151
+  content: |
+    # /etc/usb_modeswitch.d/0bda:8151
+    # Rule for the USB device RTL8151. Switch its mode to RTL8152.
+    
+    # Realtek RTL8151
+    
+    TargetVendor=0x0bda
+    TargetProduct=8152
+    MessageContent="555342430860d9a9c0000000800006e0000000000000000000000000000000"
+- path: /etc/netplan/99-eth-usb-hub-hat-b-config.yaml
+  content: |
+    # /etc/netplan/99-eth-usb-hub-hat-b-config.yaml after installation
+    # Netplan rule to set the ehernet interface name to "eth0".
+    # Edit this file to configure your network device.
+    network:
+      ethernets:
+        eth0:
+          match:
+            macaddress: "00:00:5e:00:53:00"  # Change to the MAC address of ETH/USB HUB HAT(B)
+          set-name: eth0
+
+
+# Global seeting of the password control. 
+# SSH login doesn't accept the passwork.
+# Passowrd of the all users are epxired and required to set in the first login. 
+ssh_pwauth: false
+chpasswd:
+  expire: true
+
+# Create uses. 
+# The example above copies the SSH public key from github account.
+# If network is not avairable at cloud-init phase, use plain text passwd or
+# hashed password. 
+users:
+- name: your-user-name
+  groups: users,adm,dialout,audio,netdev,video,plugdev,cdrom,games,input,gpio,spi,i2c,render,sudo
+  shell: /bin/bash
+  ssh_import_id:
+    - gh:your-github-account
+  sudo: ALL=(ALL) NOPASSWD:ALL
+
+
+# Run once-per-instance at the end of the installation
+# 1. Create 1GB swap file
+# 2. Do apt apgrade ( Now, it is safe because we have swap file.) 
+# 3. Then, shutdown .
+runcmd:
+#- localectl set-x11-keymap "jp" pc105
+#- setupcon -k --force || true
+- fallocate -l 1G /swapfile
+- mkswap /swapfile
+- swapon /swapfile
+- echo '/swapfile none swap sw 0 0' >> /etc/fstab
+- apt upgrade  # Comment out, if the network is not available. 
+- dd if=/dev/random of=/boot/firmware/network-config bs=512 count=16
+- rm /boot/firmware/network-config
+- shutdown -r +1
+
+

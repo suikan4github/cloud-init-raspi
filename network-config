@@ -1,0 +1,16 @@
+network:
+  version: 2
+  renderer: networkd
+  wifis:
+    wlan0:
+#     Un-commnet the following line after Ubuntu server 22.10
+#      regulatory-domain: "JP"
+      dhcp4: true
+      optional: true
+      access-points:
+        "your-ap-ssid":
+          password: "your-ap-password"
+  ethernets:
+    eth0:
+      dhcp4: true
+      optional: true
