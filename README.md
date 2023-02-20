@@ -32,7 +32,7 @@ USBホストブートを行うためには、USB SSDを接続するUSBハブが�
 RasPi 3/Zero 2は工場出荷状態ではUSBホストブートができない。そこで最初に[RasPi 3/Zero 2をUSBホストブート可能にする](https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#raspberry-pi-2b-3a-3b-cm3-cm3-zero-2-w)。
 
 まず、[RasPi Imager](https://www.raspberrypi.com/software/)を使って、SDカードにOSのイメージを焼く。
-OSにはUbuntu Serverを使う。OSを焼いたら、SDカードをホストPCから抜かずに設定ファイルの編集を行う。
+OSにはUbuntu Serverを使う。OSを焼いたら、SDカードをホストPCからいったん抜いて挿しなおしたあとに設定ファイルの編集を行う。いったん抜くのはRasPi Imagerによるパーティション変更をWindowsに認識させるためである。
 
 編集するファイルはSDカードのconfig.txtである。このファイルの最後に次の1行を追加する。
 
@@ -49,7 +49,15 @@ USBホストブート可能になったらSDカードは不要なので抜いて
 不能に戻すことはできない。
 
 # cloud-initのカスタム化
-利用に先立ってカスタム化を行わねばならない。カスタム化するのは、user-dataとnetwork-configの二つのファイルである。
+
+[Cloud-Init](https://cloudinit.readthedocs.io/en/latest/)はその名の通りクラウド上のインスタンスの初期設定のための機能であるが、RasPi Imagerはこの機能を使って各種の設定を行っている。
+
+Cloud-Initを使うには、このリポジトリから次の二つのファイルをダウンロードして、RasPi Imagerが書き込んだファイルを上書きする。
+- [user-data](user-data)
+- [network-config](network-config)
+
+利用に先立ってこれらのファイルのカスタム化を行わねばならない。
+
 ## user-data
 |設定     | キー          | デフォルト値            | 備考　|
 |---------|--------------|------------------------|-------|
@@ -106,19 +114,14 @@ Wi-Fiの設定はnetwork-configファイルで行う。この"access-points:" �
 
 このとき、RasPi Imagerの*Advanced Option*は使わないように気を付ける。この機能はRasPi OSでしか試験されておらず、2022年の時点では、場合によっては[ブート時にスクリーンがブラックアウト](https://GitHub.com/raspberrypi/rpi-imager/issues/286#issuecomment-974020447)することが知られている。
 
-RasPi ImagerでOSイメージを焼き終わったら、ホストPCにSSDをさしたまま、Cloud-Initの設定を行う。[Cloud-Init](https://cloudinit.readthedocs.io/en/latest/)はその名の通りクラウド上のインスタンスの初期設定のための機能であるが、RasPi Imagerはこの機能を使って各種の設定を行っている。
-
-Cloud-Initを使うには、このリポジトリから次の二つのファイルをダウンロードして、RasPi Imagerが書き込んだファイルを上書きする。
-- [user-data](user-data)
-- [network-config](network-config)
-
+RasPi ImagerでOSイメージを焼き終わったら、ホストPCからSSDを抜いて挿しなおした後、user-dataとnetwork-configを上述のカスタム化したファイルで上書きする。
 
 # USB SSDからのブート後
 user-dataとnetwork-configの準備ができたらUSB SSDをホスト・コンピュータから取り外し、RasPiに接続して起動する。
 
 log-inプロンプトが表示されても何もしなくてよい。
 
-起動後、Cloud-Initがuser-dataとnetowork-configに基づいた設定を行う。この設定にはaptによるプログラム更新も含まれており、長ければ数十分かかる。
+起動後、Cloud-Initがuser-dataとnetowork-configに基づいた設定を行う。この設定にはaptによるプログラム更新も含まれており、長ければ数十分かかるかもしれない。
 
 すべての設定と更新が終了するとシステムは自動的に再起動する。
 
