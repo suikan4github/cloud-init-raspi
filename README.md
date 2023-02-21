@@ -14,7 +14,7 @@ OSはUbuntu Server 22.04 LTSを使う。また、ユーザーはSSH経由でロ�
 - Ubuntu Server 22.04 LTS
 - Wi-Fi の設定
 - [Waveshare ETH/USB HUB HAT(B)](https://www.waveshare.com/wiki/ETH/USB_HUB_HAT_(B))のEthernetを使えるようにする
-- ローカルネットから *hostname*.localnet としてアクセスできるようにする。
+- ローカルネットから *hostname*.local としてアクセスできるようにする。
 - スワップファイルを作成する
 
 ## 使い方
@@ -24,8 +24,7 @@ OSはUbuntu Server 22.04 LTSを使う。また、ユーザーはSSH経由でロ�
 3. USB SSDからブートして設定する
 3. Ethernetを設定する
 
-USBホストブートを行うためには、USB SSDを接続するUSBハブが必要である。ハブにはETH/USB HUB HAT(B)を使っている。
-![](image/hardware.jpg)
+RasPi Zero 2 WからUSBホストブートを行うためには、USB SSDを接続するUSBハブが必要である。ハブにはETH/USB HUB HAT(B)を使っている。
 
 
 # RasPi 3/Zero 2をUSBホストブート可能にする
@@ -39,6 +38,8 @@ OSにはUbuntu Serverを使う。OSを焼いたら、SDカードをホストPC�
 ```
 program_usb_boot_mode=1
 ```
+![](image/sdcard.drawio.png)
+
 この設定があると、RasPiはブート時にEEPROMを書き直し、USBホストブート可能にする。
 ブート開始から作業の完了まで30秒程度であるので、すぐにシャットダウンしてよい。
 心配ならば電源投入から5分ほど放置しておく。なお、このSDカードのシステムは以降使わないので、シャットダウンせずに電源を抜いても良い。
@@ -115,6 +116,8 @@ Wi-Fiの設定はnetwork-configファイルで行う。この"access-points:" �
 このとき、RasPi Imagerの*Advanced Option*は使わないように気を付ける。この機能はRasPi OSでしか試験されておらず、2022年の時点では、場合によっては[ブート時にスクリーンがブラックアウト](https://GitHub.com/raspberrypi/rpi-imager/issues/286#issuecomment-974020447)することが知られている。
 
 RasPi ImagerでOSイメージを焼き終わったら、ホストPCからSSDを抜いて挿しなおした後、user-dataとnetwork-configを上述のカスタム化したファイルで上書きする。
+
+![](image/ssd.drawio.png)
 
 # USB SSDからのブート後
 user-dataとnetwork-configの準備ができたらUSB SSDをホスト・コンピュータから取り外し、RasPiに接続して起動する。
