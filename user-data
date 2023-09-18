@@ -107,9 +107,9 @@ runcmd:
 - mkswap /swapfile
 - swapon /swapfile
 - echo '/swapfile none swap sw 0 0' >> /etc/fstab
-- apt upgrade  # Comment out, if the network is not available. 
+- apt-get -y upgrade  # Comment out, if the network is not available. 
 - dd if=/dev/random of=/boot/firmware/network-config bs=512 count=16
 - rm /boot/firmware/network-config
-- shutdown -r +1
+- shutdown -h +1
 
 
